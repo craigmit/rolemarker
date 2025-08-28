@@ -8,6 +8,10 @@
       width: 300px;
       margin: 20px auto;
     }
+    #controls {
+      text-align: center;
+      margin: 15px;
+    }
     #result {
       text-align: center;
       font-size: 1.2em;
@@ -18,12 +22,22 @@
 <body>
   <h2 style="text-align:center;">QR Scanner with Speech</h2>
   <div id="reader"></div>
-  <div id="result">Scan a QR code...</div>
+  
+  <div id="controls">
+    <button id="startBtn">Start</button>
+    <button id="stopBtn">Stop</button>
+  </div>
+
+  <div id="result">Scanner stopped.</div>
 
   <!-- QR code scanner library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <script>
+    let html5QrCode;
+    let isScanning = false;
+    let lastScanned = null;
+
     function speak(text) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -31,31 +45,128 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    function startScanner() {
-      const html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: 250 };
-
-      // Use the "environment" (back) camera if available
-      html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText, decodedResult) => {
-          document.getElementById("result").innerText = "Scanned: " + decodedText;
-          speak(decodedText);
-
-          // Optional: stop scanning after first scan
-          html5QrCode.stop().catch(err => console.error("Stop failed", err));
-        },
-        (errorMessage) => {
-          // Ignore scan errors
-        }
-      ).catch(err => {
-        console.error("Unable to start scanning", err);
-      });
+    function getPersonName(decodedText) {
+      if (decodedText === "N11549") {
+        return "Mossy";
+	  } else if (decodedText === "N16150") {
+        return "Malcolm";
+      } else if (decodedText === "N21530") {
+        return "Dingle";
+      } else if (decodedText === "N22117") {
+        return "Simon";
+      } else if (decodedText === "N23036") {
+        return "Michael";
+      } else if (decodedText === "N23143") {
+        return "Neo";
+      } else if (decodedText === "N23424") {
+        return "Jesse";
+      } else if (decodedText === "N23427") {
+        return "Jonathan";
+      } else if (decodedText === "N23430") {
+        return "Cooper";
+      } else if (decodedText === "N23549") {
+        return "Michael";
+      } else if (decodedText === "N23677") {
+        return "Jan";
+      } else if (decodedText === "N23741") {
+        return "Christopher";
+      } else if (decodedText === "N23792") {
+        return "Griffin";
+      } else if (decodedText === "N23793") {
+        return "Balan";
+      } else if (decodedText === "N23957") {
+        return "Charlie";
+      } else if (decodedText === "N23958") {
+        return "Charles";
+      } else if (decodedText === "N24006") {
+        return "Francesco";
+      } else if (decodedText === "N24052") {
+        return "Nicholas";
+      } else if (decodedText === "N24074") {
+        return "Craig";
+      } else if (decodedText === "N24169") {
+        return "Robert";
+      } else if (decodedText === "N24186") {
+        return "Maanvish";
+      } else if (decodedText === "N24198") {
+        return "Declan";
+      } else if (decodedText === "N24200") {
+        return "Petros";
+      } else if (decodedText === "N24234") {
+        return "Lucas";
+      } else if (decodedText === "N24251") {
+        return "Gabriel";
+      } else if (decodedText === "N24260") {
+        return "Ben";
+      } else if (decodedText === "V23245") {
+        return "Oliver";
+      } else if (decodedText === "W13209") {
+        return "Zoe";
+      } else if (decodedText === "W13210") {
+        return "Kaitlyn";
+      } else if (decodedText === "W13211") {
+        return "Caitlin";
+      } else if (decodedText === "W13212") {
+        return "Kimberley";
+      } else if (decodedText === "W13225") {
+        return "Dannielle";
+      } else if (decodedText === "W13288") {
+        return "Jane";
+      } else if (decodedText === "W13313") {
+        return "Grace";
+      } else if (decodedText === "W13322") {
+        return "Samantha";
+      } else {
+        return "Unknown person " + decodedText;
+      }
     }
 
-    // Kick off scanning after page load
-    window.addEventListener("load", startScanner);
+    async function startScanner() {
+      if (isScanning) return; // prevent double start
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: 250 };
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            document.getElementById("result").innerText = "Scanned: " + decodedText;
+
+            if (decodedText !== lastScanned) {
+              lastScanned = decodedText;
+              const personName = getPersonName(decodedText);
+              speak("Hello " + personName);
+            }
+          },
+          (errorMessage) => {
+            // ignore scan errors
+          }
+        );
+        isScanning = true;
+        lastScanned = null; // reset on each start
+        document.getElementById("result").innerText = "Scanning...";
+      } catch (err) {
+        console.error("Unable to start scanning", err);
+      }
+    }
+
+    async function stopScanner() {
+      if (html5QrCode && isScanning) {
+        try {
+          await html5QrCode.stop();
+          await html5QrCode.clear();
+          isScanning = false;
+          lastScanned = null;
+          document.getElementById("result").innerText = "Scanner stopped.";
+        } catch (err) {
+          console.error("Stop failed", err);
+        }
+      }
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startScanner);
+    document.getElementById("stopBtn").addEventListener("click", stopScanner);
   </script>
 </body>
 </html>
