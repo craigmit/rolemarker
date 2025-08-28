@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Scan + Speech</title>
+  <style>
+    #reader {
+      width: 300px;
+      margin: 20px auto;
+    }
+    #result {
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">QR Scanner with Speech</h2>
+  <div id="reader"></div>
+  <div id="result">Scan a QR code...</div>
+
+  <!-- QR code scanner library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <script>
+    function speak(text) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function startScanner() {
+      const html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: 250 };
+
+      // Use the "environment" (back) camera if available
+      html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (decodedText, decodedResult) => {
+          document.getElementById("result").innerText = "Scanned: " + decodedText;
+          speak(decodedText);
+
+          // Optional: stop scanning after first scan
+          html5QrCode.stop().catch(err => console.error("Stop failed", err));
+        },
+        (errorMessage) => {
+          // Ignore scan errors
+        }
+      ).catch(err => {
+        console.error("Unable to start scanning", err);
+      });
+    }
+
+    // Kick off scanning after page load
+    window.addEventListener("load", startScanner);
+  </script>
+</body>
+</html>
