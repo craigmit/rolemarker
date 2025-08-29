@@ -2,25 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Scan + Speech</title>
   <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+    }
+    h2 {
+      text-align: center;
+      margin: 16px 0;
+      font-size: 1.6em;
+    }
     #reader {
-      width: 300px;
-      margin: 20px auto;
+      width: 90vw;          /* scale to screen width */
+      max-width: 400px;     /* don’t get too huge on big screens */
+      margin: 0 auto;
     }
     #controls {
       text-align: center;
-      margin: 15px;
+      margin: 16px;
+    }
+    #controls button {
+      font-size: 1.2em;
+      padding: 12px 24px;
+      margin: 8px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    #controls button:active {
+      background: #0056b3;
     }
     #result {
       text-align: center;
-      font-size: 1.2em;
-      margin-top: 10px;
+      font-size: 1.3em;
+      margin: 16px;
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">QR Scanner with Speech</h2>
+  <h2>QR Scanner with Speech</h2>
   <div id="reader"></div>
   
   <div id="controls">
@@ -122,9 +148,9 @@
     }
 
     async function startScanner() {
-      if (isScanning) return; // prevent double start
+      if (isScanning) return;
       html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: 250 };
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
       try {
         await html5QrCode.start(
@@ -132,19 +158,15 @@
           config,
           (decodedText) => {
             document.getElementById("result").innerText = "Scanned: " + decodedText;
-
             if (decodedText !== lastScanned) {
               lastScanned = decodedText;
-              const personName = getPersonName(decodedText);
-              speak("Hello " + personName);
+              speak("Hello " + getPersonName(decodedText));
             }
           },
-          (errorMessage) => {
-            // ignore scan errors
-          }
+          () => {}
         );
         isScanning = true;
-        lastScanned = null; // reset on each start
+        lastScanned = null;
         document.getElementById("result").innerText = "Scanning...";
       } catch (err) {
         console.error("Unable to start scanning", err);
